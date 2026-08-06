@@ -1,0 +1,37 @@
+======================================================================
+BAYU DIGITAL STORE - TEMPLATE LAPORAN KEUANGAN BULANAN UMKM
+======================================================================
+
+Terima kasih telah membeli produk digital dari Bayu Digital Store!
+Berikut adalah panduan dan struktur rumus pencatatan Laporan Keuangan Bulanan UMKM.
+
+----------------------------------------------------------------------
+1. STRUKTUR KOLOM PENCATATAN KEUANGAN (EXCEL / GOOGLE SHEETS)
+----------------------------------------------------------------------
+Kolom A: Tanggal (Format: YYYY-MM-DD)
+Kolom B: No. Transaksi (Format: TRX-001, TRX-002, dst)
+Kolom C: Kategori (Pilihan: Penjualan, Pembelian Bahan, Operasional, Gaji, Lain-lain)
+Kolom D: Keterangan / Deskripsi Transaksi
+Kolom E: Pemasukan (Debit) - Rp
+Kolom F: Pengeluaran (Kredit) - Rp
+Kolom G: Saldo Akhir - Rp (Rumus: =Saldo_Sebelumnya + Pemasukan - Pengeluaran)
+
+----------------------------------------------------------------------
+2. RUMUS UTAMA (FORMULA EXCEL)
+----------------------------------------------------------------------
+- Total Pemasukan Bulanan : =SUM(E2:E1000)
+- Total Pengeluaran Bulanan: =SUM(F2:F1000)
+- Laba Bersih (Net Profit) : =SUM(E2:E1000) - SUM(F2:F1000)
+- Total Penjualan per Kategori: =SUMIF(C2:C1000, "Penjualan", E2:E1000)
+
+----------------------------------------------------------------------
+3. TIPS PENGELOLAAN KEUANGAN UMKM
+----------------------------------------------------------------------
+1. Pisahkan rekening pribadi dengan rekening bisnis secara disiplin.
+2. Catat transaksi di hari yang sama (jangan menunda hingga akhir bulan).
+3. Cadangkan 10% laba bersih untuk dana darurat dan pengembangan produk baru.
+
+Dukungan Pelanggan:
+WhatsApp: 085317126862
+Email: muhamadaibayu@gmail.com
+======================================================================

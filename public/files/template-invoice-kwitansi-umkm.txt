@@ -1,0 +1,40 @@
+======================================================================
+BAYU DIGITAL STORE - TEMPLATE INVOICE & KWITANSI OTOMATIS UMKM
+======================================================================
+
+Format struktur Invoice & Kwitansi Penjualan standar bisnis modern.
+
+----------------------------------------------------------------------
+STRUCTURE / RUMUS EXCEL INVOICE
+----------------------------------------------------------------------
+[HEADER INVOICE]
+Nama Usaha   : [Nama Toko / Usaha Anda]
+Alamat/No HP : [Kontak Usaha]
+No. Invoice  : INV/2026/08/001
+Tanggal      : [DD-MM-YYYY]
+Jatuh Tempo  : [DD-MM-YYYY]
+
+[DATA PELANGGAN]
+Kepada Yth   : [Nama Pembeli]
+Email/No HP  : [Kontak Pembeli]
+
+[TABEL RINCIAN ITEM]
+----------------------------------------------------------------------
+No | Deskripsi Produk / Jasa | Qty | Harga Satuan (Rp) | Subtotal (Rp)
+----------------------------------------------------------------------
+1  | [Nama Item 1]            | 1   | 50.000            | =C*D
+2  | [Nama Item 2]            | 2   | 25.000            | =C*D
+----------------------------------------------------------------------
+SUBTOTAL                      : =SUM(E15:E20)
+DISPOSISI / DISKON            : 0
+TOTAL BAYAR                   : =SUBTOTAL - DISKON
+
+[METODE PEMBAYARAN]
+Bank / QRIS  : [Nama Bank / QRIS Anda]
+No. Rekening : [No Rekening]
+Atas Nama    : [Nama Pemilik]
+
+======================================================================
+Dukungan Pelanggan Bayu Digital Store:
+WhatsApp: 085317126862 | Email: muhamadaibayu@gmail.com
+======================================================================
