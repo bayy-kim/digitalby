@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <pattern id="halftone" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="4" cy="4" r="2.5" fill="#121212" opacity="0.12"/>
+      <circle cx="12" cy="12" r="2.5" fill="#121212" opacity="0.12"/>
+    </pattern>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="12" dy="12" stdDeviation="0" flood-color="#121212"/>
+    </filter>
+  </defs>
+
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="#FFEE00" stroke="#121212" stroke-width="20" filter="url(#shadow)"/>
+  <rect x="24" y="24" width="464" height="464" rx="64" fill="url(#halftone)"/>
+
+  <path d="M 120 110 L 320 110 L 392 182 L 392 402 C 392 415.2 381.2 426 368 426 L 120 426 C 106.8 426 96 415.2 96 402 L 96 134 C 96 120.8 106.8 110 120 110 Z" fill="#FFFFFF" stroke="#121212" stroke-width="16" stroke-linejoin="round"/>
+  <path d="M 320 110 L 320 182 L 392 182 Z" fill="#E63946" stroke="#121212" stroke-width="14" stroke-linejoin="round"/>
+
+  <path d="M 270 140 L 170 270 L 250 270 L 210 390 L 330 240 L 250 240 Z" fill="#FFEE00" stroke="#121212" stroke-width="12" stroke-linejoin="round"/>
+  <polygon points="60,60 85,35 90,70 125,55 105,90 140,105 100,120 115,155 80,135 60,165 55,125 20,115 45,90 25,60 60,70" fill="#E63946" stroke="#121212" stroke-width="8"/>
+</svg>

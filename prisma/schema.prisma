@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  totpSecret   String
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  description String
+  price       Int           // dalam Rupiah, integer
+  coverUrl    String
+  category    String?
+  isActive    Boolean       @default(true)
+  files       ProductFile[]
+  orders      Order[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ProductFile {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  fileName  String
+  blobUrl   String   // private blob path
+  mimeType  String
+  sizeBytes Int
+}
+
+model Order {
+  id             String          @id @default(uuid())
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id])
+  amount         Int
+  status         OrderStatus     @default(PENDING)
+  ipaymuTrxId    String?
+  qrisUrl        String?
+  customerName   String?
+  customerEmail  String?
+  customerPhone  String?
+  expiredAt      DateTime
+  createdAt      DateTime        @default(now())
+  downloadTokens DownloadToken[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
+model DownloadToken {
+  id        String   @id @default(uuid())
+  token     String   @unique // crypto.randomBytes(32).toString('hex')
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedCount Int      @default(0)
+  maxUses   Int      @default(3)
+  createdAt DateTime @default(now())
+}
+
+model WebhookLog {
+  id         String   @id @default(uuid())
+  provider   String   @default("ipaymu")
+  rawPayload Json
+  isValid    Boolean
+  receivedAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actor     String   // admin email
+  action    String
+  detail    String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model LoginAttempt {
+  id        String   @id @default(uuid())
+  ipAddress String
+  success   Boolean
+  createdAt DateTime @default(now())
+}
