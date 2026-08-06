@@ -169,11 +169,6 @@ export default async function ProductDetailPage({
                     {formatRupiah(product.price)}
                   </span>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] bg-[#121212] text-white font-bold px-2 py-0.5 rounded uppercase">
-                    Tanpa Biaya Tambahan
-                  </span>
-                </div>
               </div>
 
               {/* Buy Form Client Component */}
