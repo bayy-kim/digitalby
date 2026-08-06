@@ -1,8 +1,9 @@
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import { HeroSection } from '@/components/HeroSection'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { ArrowDown, FileText, CheckCircle2, Zap, ShieldCheck, AlertCircle, PackageCheck } from 'lucide-react'
+import { FileText } from 'lucide-react'
 
 export const revalidate = 0 // Dynamic catalog
 
@@ -45,45 +46,8 @@ export default async function HomePage() {
       <Header />
 
       <main className="flex-1">
-        {/* HERO SECTION - Comic Modern Style */}
-        <section className="relative bg-[#FFEE00] border-b-4 border-[#121212] py-12 px-4 halftone-pattern-subtle overflow-hidden">
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <div className="inline-block bg-[#E63946] text-white text-xs font-bold uppercase tracking-widest px-3 py-1 border-2 border-[#121212] shadow-[2px_2px_0_#121212] rounded mb-4 transform -rotate-2">
-              Toko Produk Digital Terpercaya
-            </div>
-
-            <h1 className="font-comic text-4xl sm:text-6xl text-[#121212] leading-none mb-4 uppercase tracking-wide">
-              PRODUK DIGITAL INSTAN UNLOCK SETELAH BAYAR!
-            </h1>
-
-            <p className="font-body text-sm sm:text-base text-[#121212] max-w-2xl mx-auto font-medium mb-8 bg-white border-2 border-[#121212] p-3 rounded-lg shadow-[3px_3px_0_#121212]">
-              Dapatkan template, ebook, dan dokumen digital secara langsung. Bayar dengan QRIS, verifikasi otomatis 24 jam tanpa tunggu admin!
-            </p>
-
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <a href="#katalog" className="comic-btn-primary text-base py-3 px-6">
-                <span>Lihat Katalog Produk</span>
-                <ArrowDown className="w-5 h-5" />
-              </a>
-            </div>
-
-            {/* Feature badges */}
-            <div className="grid grid-cols-3 gap-2 max-w-lg mx-auto mt-8 pt-4 border-t-2 border-[#121212]/20">
-              <div className="flex items-center justify-center gap-1.5 text-xs font-bold">
-                <Zap className="w-4 h-4 text-[#E63946]" />
-                <span>Proses Otomatis</span>
-              </div>
-              <div className="flex items-center justify-center gap-1.5 text-xs font-bold">
-                <FileText className="w-4 h-4 text-[#1D3557]" />
-                <span>Format Lengkap</span>
-              </div>
-              <div className="flex items-center justify-center gap-1.5 text-xs font-bold">
-                <ShieldCheck className="w-4 h-4 text-[#E63946]" />
-                <span>Aman & Terenkripsi</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* HERO SECTION - Comic Modern Style with Animations */}
+        <HeroSection />
 
         {/* CATALOG SECTION */}
         <section id="katalog" className="py-12 px-4 max-w-6xl mx-auto">
