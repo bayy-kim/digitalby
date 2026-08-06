@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import argon2 from 'argon2'
-import { generateSecret, verifySync } from 'otplib'
+import { verifyTotpToken } from '@/lib/totp'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -42,11 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        // Verify 2FA TOTP Code
-        const isTotpValid = verifySync({
-          token: totpCode,
-          secret: admin.totpSecret,
-        })
+        // Verify 2FA TOTP Code using AES-256-GCM decrypted secret
+        const isTotpValid = verifyTotpToken(totpCode, admin.totpSecret)
 
         if (!isTotpValid) {
           return null
