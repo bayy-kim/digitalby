@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     let coverUrl = ''
     if (coverFile && coverFile.size > 0) {
       const coverBlob = await put(`covers/${Date.now()}-${coverFile.name}`, coverFile, {
-        access: 'public',
+        access: 'private',
       })
       coverUrl = coverBlob.url
     }
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
         }
 
         const fileBlob = await put(`files/${product.id}/${file.name}`, file, {
-          access: 'public',
+          access: 'private',
         })
 
         const fileRecord = await prisma.productFile.create({

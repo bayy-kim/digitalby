@@ -42,7 +42,7 @@ export async function PUT(
     let coverUrl = existingProduct.coverUrl
     if (coverFile && coverFile.size > 0) {
       const coverBlob = await put(`covers/${Date.now()}-${coverFile.name}`, coverFile, {
-        access: 'public',
+        access: 'private',
       })
       coverUrl = coverBlob.url
     }
@@ -70,7 +70,7 @@ export async function PUT(
         }
 
         const fileBlob = await put(`files/${id}/${file.name}`, file, {
-          access: 'public',
+          access: 'private',
         })
 
         await prisma.productFile.create({
