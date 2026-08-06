@@ -90,6 +90,16 @@ export async function POST(request: Request) {
         data: { status: 'PAID' },
       })
 
+      // Decrement product stock if > 0
+      if (order.product && order.product.stock > 0) {
+        await prisma.product.update({
+          where: { id: order.product.id },
+          data: {
+            stock: { decrement: 1 },
+          },
+        })
+      }
+
       // Generate secure 32-byte cryptographic download token
       const downloadTokenStr = crypto.randomBytes(32).toString('hex')
       const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours expiry
@@ -103,7 +113,7 @@ export async function POST(request: Request) {
         },
       })
 
-      console.log(`Order ${order.id} marked as PAID. Download token generated.`)
+      console.log(`Order ${order.id} marked as PAID. Stock decremented. Download token generated.`)
     } else if (remoteStatus === 2) { // 2 = Expired / Canceled
       await prisma.order.update({
         where: { id: order.id },

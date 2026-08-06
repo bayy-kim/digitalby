@@ -2,7 +2,7 @@ import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import { FileText, CheckCircle2, ShieldCheck, Zap, Lock, ArrowLeft } from 'lucide-react'
+import { FileText, CheckCircle2, ShieldCheck, Zap, Lock, ArrowLeft, PackageCheck } from 'lucide-react'
 import Link from 'next/link'
 import { BuyButton } from './BuyButton'
 
@@ -52,6 +52,8 @@ export default async function ProductDetailPage({
     )
   ).join(', ')
 
+  const isSoldOut = product.stock <= 0
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA]">
       <Header />
@@ -71,17 +73,25 @@ export default async function ProductDetailPage({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
           {/* Left Column: Image & File Specs */}
           <div className="md:col-span-5 flex flex-col gap-4">
-            <div className="comic-panel p-2 bg-white overflow-hidden">
+            <div className="comic-panel p-2 bg-white overflow-hidden relative">
               <div className="aspect-video sm:aspect-square w-full bg-[#FFEE00] border-2 border-[#121212] rounded overflow-hidden relative">
                 {product.coverUrl ? (
                   <img
                     src={product.coverUrl}
                     alt={product.title}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover ${isSoldOut ? 'grayscale contrast-125' : ''}`}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center font-comic text-2xl text-gray-500">
                     BAYU STORE
+                  </div>
+                )}
+
+                {isSoldOut && (
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center">
+                    <span className="font-comic text-3xl text-white bg-[#E63946] border-3 border-[#121212] px-6 py-2 shadow-[4px_4px_0_#121212] transform -rotate-6 uppercase tracking-wider">
+                      SOLD OUT
+                    </span>
                   </div>
                 )}
               </div>
@@ -93,6 +103,15 @@ export default async function ProductDetailPage({
                 INFORMASI FILE
               </h3>
               
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600 font-bold">Stok Barang:</span>
+                {isSoldOut ? (
+                  <span className="comic-badge bg-red-600 text-white">0 (SOLD OUT)</span>
+                ) : (
+                  <span className="comic-badge bg-green-500 text-white">{product.stock} Tersedia</span>
+                )}
+              </div>
+
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600 font-bold">Format Berkas:</span>
                 <span className="comic-badge bg-[#FFEE00] text-[#121212]">
@@ -126,11 +145,16 @@ export default async function ProductDetailPage({
           {/* Right Column: Title, Price, Buy Action */}
           <div className="md:col-span-7 flex flex-col gap-6">
             <div className="comic-panel p-6 bg-white space-y-4">
-              {product.category && (
-                <span className="inline-block comic-badge bg-[#E63946] text-white">
-                  {product.category}
+              <div className="flex items-center justify-between gap-2">
+                {product.category && (
+                  <span className="inline-block comic-badge bg-[#E63946] text-white">
+                    {product.category}
+                  </span>
+                )}
+                <span className={`text-xs font-bold px-2 py-0.5 rounded border ${isSoldOut ? 'bg-red-100 text-red-800 border-red-300' : 'bg-green-100 text-green-800 border-green-300'}`}>
+                  {isSoldOut ? 'Stok Habis' : `Sisa Stok: ${product.stock}`}
                 </span>
-              )}
+              </div>
 
               <h1 className="font-comic text-3xl sm:text-4xl text-[#121212] leading-tight">
                 {product.title}
@@ -153,7 +177,7 @@ export default async function ProductDetailPage({
               </div>
 
               {/* Buy Form Client Component */}
-              <BuyButton productId={product.id} price={product.price} title={product.title} />
+              <BuyButton productId={product.id} price={product.price} title={product.title} stock={product.stock} />
             </div>
 
             {/* Description & Features */}

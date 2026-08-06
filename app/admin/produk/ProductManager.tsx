@@ -18,6 +18,7 @@ interface Product {
   title: string
   description: string
   price: number
+  stock: number
   coverUrl: string
   category: string | null
   isActive: boolean
@@ -38,6 +39,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
+  const [stock, setStock] = useState('100')
   const [category, setCategory] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [coverFile, setCoverFile] = useState<File | null>(null)
@@ -49,6 +51,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
     setSlug('')
     setDescription('')
     setPrice('')
+    setStock('100')
     setCategory('')
     setIsActive(true)
     setCoverFile(null)
@@ -63,6 +66,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
     setSlug(p.slug)
     setDescription(p.description)
     setPrice(String(p.price))
+    setStock(String(p.stock))
     setCategory(p.category || '')
     setIsActive(p.isActive)
     setCoverFile(null)
@@ -97,6 +101,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
       formData.append('slug', slug)
       formData.append('description', description)
       formData.append('price', price)
+      formData.append('stock', stock)
       formData.append('category', category)
       formData.append('isActive', String(isActive))
 
@@ -127,7 +132,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
 
       setShowModal(false)
       router.refresh()
-      // Refresh local list
+      
       const fetchRes = await fetch('/api/admin/products')
       if (fetchRes.ok) {
         const fresh = await fetchRes.json()
@@ -165,6 +170,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
               <th className="p-3">Judul & Slug</th>
               <th className="p-3">Kategori</th>
               <th className="p-3">Harga</th>
+              <th className="p-3">Stok</th>
               <th className="p-3">Berkas</th>
               <th className="p-3">Status</th>
               <th className="p-3 text-right">Aksi</th>
@@ -173,7 +179,7 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
           <tbody>
             {products.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-6 text-center text-gray-500 font-bold">
+                <td colSpan={8} className="p-6 text-center text-gray-500 font-bold">
                   Belum ada produk. Klik "Tambah Produk Baru" di atas.
                 </td>
               </tr>
@@ -195,6 +201,13 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
                   </td>
                   <td className="p-3 font-bold text-[#E63946]">{p.category || '-'}</td>
                   <td className="p-3 font-comic text-sm text-[#121212]">{formatRupiah(p.price)}</td>
+                  <td className="p-3">
+                    {p.stock <= 0 ? (
+                      <span className="comic-badge bg-red-600 text-white">0 (SOLD OUT)</span>
+                    ) : (
+                      <span className="font-bold text-[#121212]">{p.stock} pcs</span>
+                    )}
+                  </td>
                   <td className="p-3 font-bold">
                     <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-300">
                       <FileText className="w-3 h-3" />
@@ -264,25 +277,37 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Slug URL (Opsional)</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Slug URL</label>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="template-excel-keuangan"
+                    placeholder="template-excel"
                     className="w-full px-3 py-2 border-2 border-[#121212] rounded font-mono focus:ring-2 focus:ring-[#FFEE00] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">Harga (Rupiah Integer)</label>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Harga (Rupiah)</label>
                   <input
                     type="number"
                     required
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="50000"
+                    className="w-full px-3 py-2 border-2 border-[#121212] rounded font-mono focus:ring-2 focus:ring-[#FFEE00] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">Stok (0 = Sold Out)</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    placeholder="100"
                     className="w-full px-3 py-2 border-2 border-[#121212] rounded font-mono focus:ring-2 focus:ring-[#FFEE00] focus:outline-none"
                   />
                 </div>
@@ -349,9 +374,6 @@ export function ProductManager({ initialProducts }: { initialProducts: Product[]
                   onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
                   className="w-full p-2 border-2 border-[#121212] rounded bg-gray-50"
                 />
-                <p className="text-[10px] text-gray-500 mt-1">
-                  Bisa pilih lebih dari 1 file. Sistem akan menggabungkannya jadi ZIP saat diunduh pembeli.
-                </p>
               </div>
 
               {/* Active Toggle */}

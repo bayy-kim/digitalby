@@ -20,6 +20,7 @@ model Product {
   title       String
   description String
   price       Int           // dalam Rupiah, integer
+  stock       Int           @default(100) // Stok barang, jika 0 -> Sold Out
   coverUrl    String
   category    String?
   isActive    Boolean       @default(true)

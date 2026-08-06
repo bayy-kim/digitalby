@@ -22,6 +22,7 @@ export async function PUT(
     const slug = formData.get('slug') as string
     const description = formData.get('description') as string
     const priceStr = formData.get('price') as string
+    const stockStr = (formData.get('stock') as string) || '0'
     const category = (formData.get('category') as string) || null
     const isActiveStr = formData.get('isActive') as string
 
@@ -34,8 +35,9 @@ export async function PUT(
     }
 
     const price = parseInt(priceStr, 10)
+    const stock = parseInt(stockStr, 10)
+    const validStock = isNaN(stock) || stock < 0 ? 0 : stock
 
-    // Handle optional cover replacement
     const coverFile = formData.get('cover') as File | null
     let coverUrl = existingProduct.coverUrl
     if (coverFile && coverFile.size > 0) {
@@ -52,13 +54,13 @@ export async function PUT(
         slug,
         description,
         price,
+        stock: validStock,
         category,
         coverUrl,
         isActive: isActiveStr === 'false' ? false : true,
       },
     })
 
-    // Handle new file additions
     const newFiles = formData.getAll('files') as File[]
     for (const file of newFiles) {
       if (file && file.size > 0) {
@@ -88,7 +90,7 @@ export async function PUT(
       data: {
         actor: session.user?.email || 'admin',
         action: 'UPDATE_PRODUCT',
-        detail: `Mengubah produk "${updated.title}" (${id})`,
+        detail: `Mengubah produk "${updated.title}" (${id}) stok ${validStock}`,
         ipAddress: ip,
       },
     })

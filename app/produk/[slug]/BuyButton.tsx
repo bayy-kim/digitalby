@@ -2,16 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ShoppingCart, Loader2, Lock } from 'lucide-react'
+import { ShoppingCart, Loader2, Lock, AlertOctagon } from 'lucide-react'
 
 export function BuyButton({
   productId,
   price,
   title,
+  stock,
 }: {
   productId: string
   price: number
   title: string
+  stock: number
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -20,8 +22,12 @@ export function BuyButton({
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
 
+  const isSoldOut = stock <= 0
+
   const handleBuy = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isSoldOut) return
+
     setLoading(true)
     setError(null)
 
@@ -44,12 +50,33 @@ export function BuyButton({
         throw new Error(data.error || 'Gagal membuat pesanan')
       }
 
-      // Redirect to checkout page
       router.push(`/checkout/${data.orderId}`)
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan sistem')
       setLoading(false)
     }
+  }
+
+  if (isSoldOut) {
+    return (
+      <div className="space-y-3 pt-2">
+        <div className="p-4 bg-red-100 border-3 border-[#121212] rounded-lg text-center space-y-2 shadow-[3px_3px_0_#121212]">
+          <AlertOctagon className="w-8 h-8 text-[#E63946] mx-auto" />
+          <h3 className="font-comic text-xl text-[#121212]">STOK PRODUK HABIS (SOLD OUT)</h3>
+          <p className="text-xs text-gray-700 font-body">
+            Maaf, stok produk digital ini sedang kosong. Silakan periksa kembali nanti atau hubungi admin via WhatsApp untuk ketersediaan ulang.
+          </p>
+        </div>
+
+        <button
+          disabled
+          type="button"
+          className="w-full text-base py-3 bg-gray-400 text-gray-800 font-comic font-bold border-3 border-[#121212] rounded-lg cursor-not-allowed uppercase shadow-[4px_4px_0_#121212] opacity-80"
+        >
+          SOLD OUT (HABIS)
+        </button>
+      </div>
+    )
   }
 
   return (

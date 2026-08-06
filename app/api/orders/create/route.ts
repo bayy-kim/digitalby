@@ -35,6 +35,14 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check Stock
+    if (product.stock <= 0) {
+      return NextResponse.json(
+        { error: 'Maaf, stok produk ini telah habis (SOLD OUT)' },
+        { status: 400 }
+      )
+    }
+
     // Set expiration 24 hours from now
     const expiredAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 

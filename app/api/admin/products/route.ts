@@ -2,14 +2,6 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { put } from '@vercel/blob'
-import { z } from 'zod'
-
-const ALLOWED_MIME_TYPES = [
-  'text/plain',
-  'application/pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-]
 
 const ALLOWED_EXTENSIONS = ['.txt', '.pdf', '.docx', '.doc']
 
@@ -42,6 +34,7 @@ export async function POST(request: Request) {
     const slugInput = formData.get('slug') as string
     const description = formData.get('description') as string
     const priceStr = formData.get('price') as string
+    const stockStr = (formData.get('stock') as string) || '100'
     const category = (formData.get('category') as string) || null
     const isActiveStr = formData.get('isActive') as string
 
@@ -54,6 +47,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Harga harus berupa angka positif' }, { status: 400 })
     }
 
+    const stock = parseInt(stockStr, 10)
+    const validStock = isNaN(stock) || stock < 0 ? 0 : stock
+
     const slug = (slugInput || title)
       .toLowerCase()
       .trim()
@@ -61,13 +57,11 @@ export async function POST(request: Request) {
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '')
 
-    // Check slug uniqueness
     const existingSlug = await prisma.product.findUnique({ where: { slug } })
     if (existingSlug) {
       return NextResponse.json({ error: 'Slug sudah digunakan oleh produk lain' }, { status: 400 })
     }
 
-    // Cover Image Handling
     const coverFile = formData.get('cover') as File | null
     let coverUrl = ''
     if (coverFile && coverFile.size > 0) {
@@ -77,29 +71,25 @@ export async function POST(request: Request) {
       coverUrl = coverBlob.url
     }
 
-    // Create Product
     const product = await prisma.product.create({
       data: {
         title,
         slug,
         description,
         price,
+        stock: validStock,
         coverUrl,
         category,
         isActive: isActiveStr === 'false' ? false : true,
       },
     })
 
-    // Product File Upload Handling (Multiple files)
     const productFiles = formData.getAll('files') as File[]
     const fileRecords = []
 
     for (const file of productFiles) {
       if (file && file.size > 0) {
         const ext = '.' + file.name.split('.').pop()?.toLowerCase()
-        const mimeType = file.type
-
-        // Validate MIME type & Extension
         if (!ALLOWED_EXTENSIONS.includes(ext)) {
           return NextResponse.json(
             { error: `Tipe file ${file.name} tidak diizinkan. Hanya .txt, .pdf, .docx` },
@@ -107,9 +97,8 @@ export async function POST(request: Request) {
           )
         }
 
-        // Upload to Vercel Blob (private token)
         const fileBlob = await put(`files/${product.id}/${file.name}`, file, {
-          access: 'public', // Blob storage URL accessed server-side only via download token stream
+          access: 'public',
         })
 
         const fileRecord = await prisma.productFile.create({
@@ -117,7 +106,7 @@ export async function POST(request: Request) {
             productId: product.id,
             fileName: file.name,
             blobUrl: fileBlob.url,
-            mimeType: mimeType || 'application/octet-stream',
+            mimeType: file.type || 'application/octet-stream',
             sizeBytes: file.size,
           },
         })
@@ -125,13 +114,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Audit Log
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
     await prisma.auditLog.create({
       data: {
         actor: session.user?.email || 'admin',
         action: 'CREATE_PRODUCT',
-        detail: `Membuat produk "${product.title}" (${product.id}) dengan ${fileRecords.length} file`,
+        detail: `Membuat produk "${product.title}" (${product.id}) stok ${validStock}`,
         ipAddress: ip,
       },
     })
