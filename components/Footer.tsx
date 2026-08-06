@@ -1,6 +1,10 @@
 import { MessageCircle, Mail, ShieldCheck, Zap } from 'lucide-react'
 
 export function Footer() {
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || ''
+  const waDisplay = process.env.NEXT_PUBLIC_WHATSAPP_DISPLAY || ''
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || ''
+
   return (
     <footer className="bg-[#121212] text-white border-t-4 border-[#121212] mt-auto">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -35,22 +39,26 @@ export function Footer() {
               HUBUNGI KAMI
             </h4>
             <div className="flex flex-col gap-2">
-              <a
-                href="https://wa.me/6285317126862"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-xs bg-[#25D366] text-[#121212] font-bold px-3 py-2 border-2 border-white rounded shadow-[2px_2px_0_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>WhatsApp: 085317126862</span>
-              </a>
-              <a
-                href="mailto:muhamadaibayu@gmail.com"
-                className="inline-flex items-center gap-2 text-xs bg-white text-[#121212] font-bold px-3 py-2 border-2 border-white rounded shadow-[2px_2px_0_#E63946] hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
-              >
-                <Mail className="w-4 h-4 text-[#E63946]" />
-                <span>Email: muhamadaibayu@gmail.com</span>
-              </a>
+              {waNumber && (
+                <a
+                  href={`https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-xs bg-[#25D366] text-[#121212] font-bold px-3 py-2 border-2 border-white rounded shadow-[2px_2px_0_#ffffff] hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp: {waDisplay || waNumber}</span>
+                </a>
+              )}
+              {contactEmail && (
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="inline-flex items-center gap-2 text-xs bg-white text-[#121212] font-bold px-3 py-2 border-2 border-white rounded shadow-[2px_2px_0_#E63946] hover:translate-x-0.5 hover:translate-y-0.5 transition-transform"
+                >
+                  <Mail className="w-4 h-4 text-[#E63946]" />
+                  <span>Email: {contactEmail}</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
