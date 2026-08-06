@@ -1,8 +1,13 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 import argon2 from 'argon2'
 import { generateSecret } from 'otplib'
 
-const prisma = new PrismaClient()
+const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_fi1zKnJ4URGI@ep-flat-forest-azkbvojq-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+const pool = new Pool({ connectionString })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   const email = process.env.ADMIN_SEED_EMAIL || 'muhamadaibayu@gmail.com'
@@ -44,4 +49,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
+    await pool.end()
   })
