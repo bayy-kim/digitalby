@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { checkIPaymuTransactionStatus } from '@/lib/ipaymu'
+import { sendTelegramPaymentSuccessNotification } from '@/lib/telegram'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
@@ -90,13 +91,11 @@ export async function POST(request: Request) {
         data: { status: 'PAID' },
       })
 
-      // Decrement product stock if > 0
+      // Decrement stock if > 0
       if (order.product && order.product.stock > 0) {
         await prisma.product.update({
           where: { id: order.product.id },
-          data: {
-            stock: { decrement: 1 },
-          },
+          data: { stock: { decrement: 1 } },
         })
       }
 
@@ -112,6 +111,15 @@ export async function POST(request: Request) {
           maxUses: 5,
         },
       })
+
+      // Send Telegram Success Notification to Admin HP
+      sendTelegramPaymentSuccessNotification({
+        orderId: order.id,
+        productTitle: order.product.title,
+        amount: order.amount,
+        customerName: order.customerName,
+        providerName: 'iPaymu QRIS Gateway',
+      }).catch((err) => console.error('Error sending Telegram auto-fulfill success:', err))
 
       console.log(`Order ${order.id} marked as PAID. Stock decremented. Download token generated.`)
     } else if (remoteStatus === 2) { // 2 = Expired / Canceled

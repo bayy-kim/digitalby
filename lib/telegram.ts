@@ -86,6 +86,65 @@ Silakan cek mutasi DANA / SeaBank Anda. Jika saldo sudah masuk, tekan tombol di 
 }
 
 /**
+ * Send Automated Payment Success Notification to Telegram Admin
+ */
+export async function sendTelegramPaymentSuccessNotification({
+  orderId,
+  productTitle,
+  amount,
+  customerName,
+  providerName,
+}: {
+  orderId: string
+  productTitle: string
+  amount: number
+  customerName?: string | null
+  providerName: string
+}) {
+  const { token, chatId } = getTelegramConfig()
+  if (!token || !chatId) return false
+
+  const formatRupiah = (num: number) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num)
+  }
+
+  const text = `🎉 *PEMBAYARAN TER-VERIFIKASI OTOMATIS!*
+----------------------------------
+🛍️ *Produk*: ${productTitle}
+💰 *Nominal*: *${formatRupiah(amount)}*
+🆔 *ID Order*: \`${orderId}\`
+👤 *Pembeli*: ${customerName || 'Pembeli Digital'}
+⚡ *Metode*: Otomatis via ${providerName}
+
+File unduhan pembeli telah *OTOMATIS DI-UNLOCK 100%*!`
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'Markdown',
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('Failed to send Telegram success notification:', err)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error sending Telegram success notification:', error)
+    return false
+  }
+}
+
+/**
  * Send Payment Proof Photo to Telegram with 1-Click Approve Button
  */
 export async function sendTelegramPhotoNotification({

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendTelegramPaymentSuccessNotification } from '@/lib/telegram'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
@@ -95,6 +96,15 @@ export async function POST(request: Request) {
         maxUses: 5,
       },
     })
+
+    // Send Telegram Success Notification to Admin HP
+    sendTelegramPaymentSuccessNotification({
+      orderId: order.id,
+      productTitle: order.product.title,
+      amount: order.amount,
+      customerName: order.customerName,
+      providerName: 'DANA Bisnis HP (Notifikasi)',
+    }).catch((err) => console.error('Error sending Telegram auto-fulfill success:', err))
 
     // Record AuditLog
     await prisma.auditLog.create({
