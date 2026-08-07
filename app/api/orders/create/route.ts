@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createIPaymuQRIS } from '@/lib/ipaymu'
+import { sendTelegramOrderNotification } from '@/lib/telegram'
 import { z } from 'zod'
 
 const createOrderSchema = z.object({
@@ -59,6 +60,17 @@ export async function POST(request: Request) {
       },
     })
 
+    // Send Telegram Notification to Admin with 1-Click Approve Button
+    sendTelegramOrderNotification({
+      orderId: order.id,
+      productTitle: product.title,
+      amount: product.price,
+      customerName: customerName || 'Pembeli Digital',
+      customerEmail,
+      customerPhone,
+      createdAt: order.createdAt,
+    }).catch((err) => console.error('Telegram notification bg error:', err))
+
     // Construct origin URL for callbacks
     const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const notifyUrl = `${origin}/api/webhook/ipaymu`
@@ -66,35 +78,36 @@ export async function POST(request: Request) {
     const cancelUrl = `${origin}/checkout/${order.id}`
 
     // Request QRIS via iPaymu Payment Direct API
-    const ipaymuRes = await createIPaymuQRIS({
-      name: customerName || 'Pembeli Digital Store',
-      email: customerEmail || undefined,
-      phone: customerPhone || undefined,
-      amount: product.price,
-      referenceId: order.id,
-      notifyUrl,
-      returnUrl,
-      cancelUrl,
-      productName: product.title,
-    })
+    let qrisUrl: string | null = null
+    let trxId: string | null = null
 
-    if (!ipaymuRes.Success || !ipaymuRes.Data) {
-      console.error('iPaymu error response:', ipaymuRes)
-      return NextResponse.json(
-        { error: ipaymuRes.Message || 'Gagal memproses pembayaran QRIS ke iPaymu' },
-        { status: 500 }
-      )
+    try {
+      const ipaymuRes = await createIPaymuQRIS({
+        name: customerName || 'Pembeli Digital Store',
+        email: customerEmail || undefined,
+        phone: customerPhone || undefined,
+        amount: product.price,
+        referenceId: order.id,
+        notifyUrl,
+        returnUrl,
+        cancelUrl,
+        productName: product.title,
+      })
+
+      if (ipaymuRes.Success && ipaymuRes.Data) {
+        qrisUrl = ipaymuRes.Data.QrImage || ipaymuRes.Data.Url || ipaymuRes.Data.QrString || null
+        trxId = String(ipaymuRes.Data.TransactionId)
+      }
+    } catch (ipaymuErr) {
+      console.warn('iPaymu integration notice:', ipaymuErr)
     }
 
-    const qrisUrl = ipaymuRes.Data.QrImage || ipaymuRes.Data.Url || ipaymuRes.Data.QrString
-    const trxId = String(ipaymuRes.Data.TransactionId)
-
-    // Update order with iPaymu trxId & qrisUrl
+    // Update order with iPaymu trxId & qrisUrl if available
     const updatedOrder = await prisma.order.update({
       where: { id: order.id },
       data: {
         ipaymuTrxId: trxId,
-        qrisUrl: qrisUrl || null,
+        qrisUrl: qrisUrl,
       },
     })
 
