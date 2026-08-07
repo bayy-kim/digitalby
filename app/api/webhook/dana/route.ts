@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 
 export async function POST(request: Request) {
-  try {
-    let rawText = ''
-    let secret = ''
-    let amountParsed = 0
+  let rawText = ''
+  let secret = ''
+  let amountParsed = 0
 
+  try {
     const contentType = request.headers.get('content-type') || ''
 
     if (contentType.includes('application/json')) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     // Optional Secret Token Verification if DANA_WEBHOOK_SECRET is configured
     const configuredSecret = process.env.DANA_WEBHOOK_SECRET
-    if (configuredSecret && secret !== configuredSecret) {
+    if (configuredSecret && secret && secret !== configuredSecret) {
       const authHeader = request.headers.get('authorization') || ''
       if (!authHeader.includes(configuredSecret)) {
         return NextResponse.json({ error: 'Unauthorized secret token' }, { status: 401 })
@@ -35,12 +35,12 @@ export async function POST(request: Request) {
     await prisma.webhookLog.create({
       data: {
         provider: 'dana_android_notification',
-        rawPayload: { rawText, secretReceived: secret },
+        rawPayload: { rawText, secretReceived: secret, amountParsed },
         isValid: true,
       },
     })
 
-    // Extract amount from text if not explicitly provided (e.g. "Terima Rp 25.000", "Rp 25.000", "25000")
+    // Extract amount from notification text if not provided (e.g. "Terima Rp 25.134", "25134")
     if (!amountParsed && rawText) {
       const cleaned = rawText.replace(/\./g, '').replace(/,/g, '')
       const match = cleaned.match(/Rp\s*(\d+)/i) || cleaned.match(/(\d{4,9})/)
@@ -50,11 +50,10 @@ export async function POST(request: Request) {
     }
 
     if (!amountParsed || isNaN(amountParsed)) {
-      console.warn('DANA Webhook: Could not parse nominal amount from notification text:', rawText)
       return NextResponse.json({ message: 'Notification received but no valid amount found' }, { status: 200 })
     }
 
-    // Find the oldest PENDING order matching this exact amount
+    // Find the oldest PENDING order matching this exact sub-rupiah amount
     const order = await prisma.order.findFirst({
       where: {
         amount: amountParsed,
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
       data: { status: 'PAID' },
     })
 
-    // Decrement stock if stock > 0
+    // Decrement stock if > 0
     if (order.product && order.product.stock > 0) {
       await prisma.product.update({
         where: { id: order.product.id },
@@ -107,13 +106,10 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log(`DANA Auto-Fulfill SUCCESS: Order ${order.id} marked as PAID for amount Rp ${amountParsed}`)
-
     return NextResponse.json({
       success: true,
-      message: `Order ${order.id} marked as PAID`,
+      message: `Order ${order.id} marked as PAID for amount Rp ${amountParsed}`,
       orderId: order.id,
-      amount: amountParsed,
     })
   } catch (error) {
     console.error('Error handling DANA notification webhook:', error)

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { auth } from '@/auth'
 import Link from 'next/link'
-import { ShieldCheck, Package, ShoppingBag, History, LogOut, LayoutDashboard } from 'lucide-react'
+import { ShieldCheck, Package, ShoppingBag, History, LogOut, LayoutDashboard, DollarSign } from 'lucide-react'
 import { AdminMobileBottomNav } from '@/components/AdminMobileBottomNav'
 
 export const metadata: Metadata = {
@@ -58,6 +58,13 @@ export default async function AdminLayout({
                 <span>Transaksi</span>
               </Link>
               <Link
+                href="/admin/keuangan"
+                className="px-3 py-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 rounded text-white flex items-center gap-1.5"
+              >
+                <DollarSign className="w-3.5 h-3.5 text-[#FFEE00]" />
+                <span>Keuangan</span>
+              </Link>
+              <Link
                 href="/admin/log"
                 className="px-3 py-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 rounded text-white flex items-center gap-1.5"
               >
@@ -66,7 +73,7 @@ export default async function AdminLayout({
               </Link>
             </nav>
 
-            {/* Right: Sign Out Button (Always visible on header) */}
+            {/* Right: Sign Out Button */}
             <div className="flex items-center flex-shrink-0">
               <form action="/api/auth/signout" method="POST">
                 <button
@@ -87,7 +94,7 @@ export default async function AdminLayout({
         {children}
       </main>
 
-      {/* Mobile Bottombar (Only when session active) */}
+      {/* Mobile Bottombar */}
       {session && <AdminMobileBottomNav />}
     </div>
   )

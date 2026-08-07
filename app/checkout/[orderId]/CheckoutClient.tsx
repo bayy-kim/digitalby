@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { QrCode, Clock, Loader2, RefreshCw, AlertCircle, ShieldCheck, CheckCircle2, Upload, Ban, CreditCard, Copy, Check } from 'lucide-react'
-import QRCodeGenerator from 'qrcode'
+import { QrCode, Clock, Loader2, RefreshCw, AlertCircle, ShieldCheck, CheckCircle2, Upload, Ban, CreditCard, Copy, Check, Lock, Smartphone } from 'lucide-react'
 
 interface CheckoutClientProps {
   order: {
@@ -34,6 +33,7 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
 
   // Copy State
   const [copiedAccount, setCopiedAccount] = useState(false)
+  const [copiedDana, setCopiedDana] = useState(false)
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -42,15 +42,6 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
       maximumFractionDigits: 0,
     }).format(amount)
   }
-
-  // Generate QR Code data URL if dynamic iPaymu string provided
-  useEffect(() => {
-    if (order.qrisUrl && !order.qrisUrl.startsWith('http') && !order.qrisUrl.startsWith('/') && !order.qrisUrl.startsWith('data:image')) {
-      QRCodeGenerator.toDataURL(order.qrisUrl, { width: 300, margin: 2 })
-        .then((url) => setQrisImage(url))
-        .catch((err) => console.error('Gagal generate QR Code client:', err))
-    }
-  }, [order.qrisUrl])
 
   // Countdown Timer
   useEffect(() => {
@@ -167,12 +158,18 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
     setTimeout(() => setCopiedAccount(false), 2000)
   }
 
+  const copyDana = () => {
+    navigator.clipboard.writeText('085217126862')
+    setCopiedDana(true)
+    setTimeout(() => setCopiedDana(false), 2000)
+  }
+
   return (
     <div className="comic-panel bg-white p-5 sm:p-6 space-y-6">
       {/* Header Info */}
       <div className="text-center border-b-3 border-[#121212] pb-4">
         <span className="comic-badge bg-[#FFEE00] text-[#121212] mb-2">
-          PEMBAYARAN QRIS / TRANSFER BANK
+          PEMBAYARAN QRIS / TRANSFER DANA &amp; SEABANK
         </span>
         <h1 className="font-comic text-2xl sm:text-3xl text-[#121212] leading-snug">
           {order.productTitle}
@@ -182,16 +179,16 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
         </p>
       </div>
 
-      {/* Amount Box */}
-      <div className="p-4 bg-[#FFEE00] border-3 border-[#121212] rounded-lg text-center shadow-[3px_3px_0_#121212]">
+      {/* Amount Box - Must be Exact with Sub-Rupiah Code */}
+      <div className="p-4 bg-[#FFEE00] border-3 border-[#121212] rounded-lg text-center shadow-[4px_4px_0_#121212]">
         <span className="text-[11px] font-bold text-[#121212] uppercase block tracking-wider">
-          Nominal Pembayaran Harus Persis Sama
+          TRANSFER PERSIS NOMINAL BERIKUT (TERMASUK KODE UNIK):
         </span>
-        <span className="font-comic text-4xl text-[#E63946] block my-1">
+        <span className="font-comic text-4xl sm:text-5xl text-[#E63946] block my-1">
           {formatRupiah(order.amount)}
         </span>
         <span className="text-[10px] bg-[#121212] text-white font-bold px-2 py-0.5 rounded inline-block">
-          Sistem Deteksi Otomatis &amp; Konfirmasi Instant
+          Nominal Dikunci Otomatis untuk Pencocokan Instan
         </span>
       </div>
 
@@ -212,13 +209,13 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* QRIS & SEABANK SECTION */}
+          {/* QRIS & SEABANK / DANA SECTION */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* OPSI 1: QRIS DANA BISNIS */}
+            {/* OPSI 1: QRIS DINAMIS DANA BISNIS (Bayu shop) */}
             <div className="p-4 bg-gray-50 border-2 border-[#121212] rounded-lg flex flex-col items-center justify-between text-center">
               <div>
                 <span className="text-xs font-bold text-[#121212] block uppercase mb-1">
-                  1. QRIS DANA BISNIS / ALL PAYMENT
+                  1. QRIS DINAMIS (Bayu shop)
                 </span>
                 <span className="text-[10px] text-gray-500 font-body block mb-2">
                   Scan pakai DANA, GoPay, OVO, ShopeePay, BCA, dll.
@@ -228,32 +225,33 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
               <div className="bg-white p-2.5 border-3 border-[#121212] rounded-lg shadow-[3px_3px_0_#121212] my-2">
                 <img
                   src={qrisImage || '/qris-dana.svg'}
-                  alt="QRIS Pembayaran"
-                  className="w-48 h-48 object-contain mx-auto"
+                  alt="QRIS Dinamis Bayu shop"
+                  className="w-52 h-52 object-contain mx-auto"
                 />
               </div>
 
               <span className="text-[10px] bg-[#FFEE00] text-[#121212] font-bold px-2 py-0.5 rounded border border-[#121212]">
-                Satu QRIS Untuk Semua Aplikasi
+                Scan &amp; Nominal Otomatis Terkunci
               </span>
             </div>
 
-            {/* OPSI 2: TRANSFER SEABANK */}
+            {/* OPSI 2: TRANSFER DANA / SEABANK MANUAL */}
             <div className="p-4 bg-blue-50/60 border-2 border-[#121212] rounded-lg flex flex-col justify-between space-y-3">
               <div>
                 <span className="text-xs font-bold text-[#1D3557] block uppercase mb-1 flex items-center gap-1.5">
                   <CreditCard className="w-4 h-4 text-[#1D3557]" />
-                  <span>2. TRANSFER BANK SEABANK</span>
+                  <span>2. TRANSFER SEABANK / DANA</span>
                 </span>
                 <span className="text-[10px] text-gray-600 font-body block">
-                  Bisa transfer antar-bank via BI-FAST / Realtime.
+                  Pilihan transfer langsung tanpa scan QRIS.
                 </span>
               </div>
 
-              <div className="bg-white p-3 border-2 border-[#121212] rounded space-y-2 font-body text-xs">
+              {/* SeaBank Box */}
+              <div className="bg-white p-3 border-2 border-[#121212] rounded space-y-1.5 font-body text-xs">
                 <div className="flex justify-between items-center text-gray-600">
-                  <span>Nama Bank:</span>
-                  <span className="font-bold text-[#121212]">SeaBank</span>
+                  <span>Bank:</span>
+                  <span className="font-bold text-[#121212]">PT Bank SeaBank Indonesia</span>
                 </div>
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Atas Nama:</span>
@@ -262,7 +260,7 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
                 <div className="flex justify-between items-center pt-1 border-t border-gray-200">
                   <span className="text-gray-600">No. Rekening:</span>
                   <div className="flex items-center gap-1">
-                    <span className="font-mono font-bold text-base text-[#E63946]">901061277934</span>
+                    <span className="font-mono font-bold text-sm text-[#E63946]">901061277934</span>
                     <button
                       onClick={copySeaBank}
                       className="p-1 bg-[#FFEE00] border border-[#121212] rounded text-[10px] font-bold hover:bg-yellow-400"
@@ -273,8 +271,28 @@ export function CheckoutClient({ order }: CheckoutClientProps) {
                 </div>
               </div>
 
+              {/* DANA Box */}
+              <div className="bg-white p-3 border-2 border-[#121212] rounded space-y-1.5 font-body text-xs">
+                <div className="flex justify-between items-center text-gray-600">
+                  <span>E-Wallet:</span>
+                  <span className="font-bold text-[#121212]">DANA Bisnis</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-gray-200">
+                  <span className="text-gray-600">No. DANA:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-mono font-bold text-sm text-[#1D3557]">085217126862</span>
+                    <button
+                      onClick={copyDana}
+                      className="p-1 bg-[#FFEE00] border border-[#121212] rounded text-[10px] font-bold hover:bg-yellow-400"
+                    >
+                      {copiedDana ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3 text-[#121212]" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="p-2 bg-white border border-[#121212] rounded text-[10px] text-gray-600">
-                Transfer persis <strong className="text-[#E63946]">{formatRupiah(order.amount)}</strong> untuk mempermudah verifikasi.
+                Transfer persis <strong className="text-[#E63946]">{formatRupiah(order.amount)}</strong> untuk verifikasi instan.
               </div>
             </div>
           </div>

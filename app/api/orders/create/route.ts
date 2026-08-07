@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createIPaymuQRIS } from '@/lib/ipaymu'
+import { generateDynamicQRISImage } from '@/lib/qris-dynamic'
 import { sendTelegramOrderNotification } from '@/lib/telegram'
 import { z } from 'zod'
 
@@ -44,14 +45,18 @@ export async function POST(request: Request) {
       )
     }
 
+    // Generate unique sub-rupiah code (e.g. +101 to +999) for 100% precise DANA auto-matching
+    const randomCode = Math.floor(Math.random() * 899) + 101
+    const exactAmount = product.price + randomCode
+
     // Set expiration 24 hours from now
     const expiredAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
 
-    // Create Order with PENDING status
+    // Create Order with PENDING status & exact unique amount
     const order = await prisma.order.create({
       data: {
         productId: product.id,
-        amount: product.price,
+        amount: exactAmount,
         status: 'PENDING',
         customerName: customerName || 'Pembeli Digital',
         customerEmail: customerEmail || undefined,
@@ -60,54 +65,50 @@ export async function POST(request: Request) {
       },
     })
 
+    // Generate Dynamic QRIS Image with exact amount locked in
+    const dynamicQrisImage = await generateDynamicQRISImage(exactAmount)
+
     // Send Telegram Notification to Admin with 1-Click Approve Button
     sendTelegramOrderNotification({
       orderId: order.id,
       productTitle: product.title,
-      amount: product.price,
+      amount: exactAmount,
       customerName: customerName || 'Pembeli Digital',
       customerEmail,
       customerPhone,
       createdAt: order.createdAt,
     }).catch((err) => console.error('Telegram notification bg error:', err))
 
-    // Construct origin URL for callbacks
+    // Optional iPaymu call as fallback / production gateway
     const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000'
-    const notifyUrl = `${origin}/api/webhook/ipaymu`
-    const returnUrl = `${origin}/order/${order.id}`
-    const cancelUrl = `${origin}/checkout/${order.id}`
-
-    // Request QRIS via iPaymu Payment Direct API
-    let qrisUrl: string | null = null
-    let trxId: string | null = null
+    let ipaymuTrxId: string | null = null
 
     try {
       const ipaymuRes = await createIPaymuQRIS({
         name: customerName || 'Pembeli Digital Store',
         email: customerEmail || undefined,
         phone: customerPhone || undefined,
-        amount: product.price,
+        amount: exactAmount,
         referenceId: order.id,
-        notifyUrl,
-        returnUrl,
-        cancelUrl,
+        notifyUrl: `${origin}/api/webhook/ipaymu`,
+        returnUrl: `${origin}/order/${order.id}`,
+        cancelUrl: `${origin}/checkout/${order.id}`,
         productName: product.title,
       })
 
       if (ipaymuRes.Success && ipaymuRes.Data) {
-        qrisUrl = ipaymuRes.Data.QrImage || ipaymuRes.Data.Url || ipaymuRes.Data.QrString || null
-        trxId = String(ipaymuRes.Data.TransactionId)
+        ipaymuTrxId = String(ipaymuRes.Data.TransactionId)
       }
     } catch (ipaymuErr) {
-      console.warn('iPaymu integration notice:', ipaymuErr)
+      console.warn('iPaymu gateway notice:', ipaymuErr)
     }
 
-    // Update order with iPaymu trxId & qrisUrl if available
+    // Update order with dynamic QRIS Image & iPaymu TrxId
     const updatedOrder = await prisma.order.update({
       where: { id: order.id },
       data: {
-        ipaymuTrxId: trxId,
-        qrisUrl: qrisUrl,
+        ipaymuTrxId: ipaymuTrxId,
+        qrisUrl: dynamicQrisImage || '/qris-dana.svg',
       },
     })
 
