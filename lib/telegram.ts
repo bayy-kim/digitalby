@@ -85,6 +85,60 @@ Silakan cek mutasi DANA / SeaBank Anda. Jika saldo sudah masuk, tekan tombol di 
   }
 }
 
+/**
+ * Send Payment Proof Photo to Telegram with 1-Click Approve Button
+ */
+export async function sendTelegramPhotoNotification({
+  photoUrl,
+  caption,
+  orderId,
+}: {
+  photoUrl: string
+  caption: string
+  orderId: string
+}) {
+  const { token, chatId } = getTelegramConfig()
+  if (!token || !chatId) return false
+
+  const replyMarkup = {
+    inline_keyboard: [
+      [
+        {
+          text: '✅ KONFIRMASI LUNAS',
+          callback_data: `approve_${orderId}`,
+        },
+      ],
+    ],
+  }
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        photo: photoUrl,
+        caption,
+        parse_mode: 'Markdown',
+        reply_markup: replyMarkup,
+      }),
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('Failed to send Telegram photo:', err)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error sending Telegram photo:', error)
+    return false
+  }
+}
+
 export async function answerTelegramCallbackQuery(callbackQueryId: string, text: string) {
   const { token } = getTelegramConfig()
   if (!token) return
