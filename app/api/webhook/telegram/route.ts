@@ -40,11 +40,17 @@ export async function POST(request: Request) {
           data: { status: 'PAID' },
         })
 
-        // Decrement Product Stock if stock > 0
-        if (order.product && order.product.stock > 0) {
+        // Decrement Product Stock & Handle EXCLUSIVE_SINGLE
+        if (order.product) {
+          const isExclusive = order.product.licenseType === 'EXCLUSIVE_SINGLE'
+          const newStock = Math.max(0, order.product.stock - 1)
+
           await prisma.product.update({
             where: { id: order.product.id },
-            data: { stock: { decrement: 1 } },
+            data: {
+              stock: newStock,
+              isActive: isExclusive ? false : newStock > 0 ? order.product.isActive : false,
+            },
           })
         }
 
@@ -76,9 +82,6 @@ export async function POST(request: Request) {
 
         // Edit Telegram message to show confirmed state
         if (chatId && messageId) {
-          const formatRupiah = (num: number) =>
-            new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num)
-
           const updatedText = `${message.text}\n\n✅ *STATUS: TERKONFIRMASI LUNAS* (${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })})`
           await editTelegramMessageText(chatId, messageId, updatedText)
         }

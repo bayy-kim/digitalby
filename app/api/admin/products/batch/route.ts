@@ -6,22 +6,6 @@ import { LicenseType } from '@prisma/client'
 
 const ALLOWED_EXTENSIONS = ['.txt', '.pdf', '.docx', '.doc']
 
-export async function GET(request: Request) {
-  const session = await auth()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const products = await prisma.product.findMany({
-    include: {
-      files: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  return NextResponse.json(products)
-}
-
 export async function POST(request: Request) {
   const session = await auth()
   if (!session) {
@@ -31,19 +15,11 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
 
-    const title = formData.get('title') as string
-    const slugInput = formData.get('slug') as string
-    const description = formData.get('description') as string
     const priceStr = formData.get('price') as string
+    const category = (formData.get('category') as string) || null
     const licenseTypeInput = (formData.get('licenseType') as string) || 'MULTI_USER'
     const licenseType: LicenseType = licenseTypeInput === 'EXCLUSIVE_SINGLE' ? 'EXCLUSIVE_SINGLE' : 'MULTI_USER'
     const stockStr = (formData.get('stock') as string) || (licenseType === 'EXCLUSIVE_SINGLE' ? '1' : '100')
-    const category = (formData.get('category') as string) || null
-    const isActiveStr = formData.get('isActive') as string
-
-    if (!title || !description || !priceStr) {
-      return NextResponse.json({ error: 'Judul, deskripsi, dan harga wajib diisi' }, { status: 400 })
-    }
 
     const price = parseInt(priceStr, 10)
     if (isNaN(price) || price < 0) {
@@ -53,22 +29,9 @@ export async function POST(request: Request) {
     let stock = parseInt(stockStr, 10)
     if (licenseType === 'EXCLUSIVE_SINGLE') {
       stock = 1
-    } else if (isNaN(stock) || stock < 0) {
-      stock = 0
     }
 
-    const slug = (slugInput || title)
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-
-    const existingSlug = await prisma.product.findUnique({ where: { slug } })
-    if (existingSlug) {
-      return NextResponse.json({ error: 'Slug sudah digunakan oleh produk lain' }, { status: 400 })
-    }
-
+    // Cover File Upload (1 Shared Cover)
     const coverFile = formData.get('cover') as File | null
     let coverUrl = ''
     if (coverFile && coverFile.size > 0) {
@@ -78,38 +41,60 @@ export async function POST(request: Request) {
       coverUrl = coverBlob.url
     }
 
-    const product = await prisma.product.create({
-      data: {
-        title,
-        slug,
-        description,
-        price,
-        stock,
-        licenseType,
-        coverUrl,
-        category,
-        isActive: isActiveStr === 'false' ? false : true,
-      },
-    })
-
+    // Multiple Files Upload (Each file becomes a standalone product)
     const productFiles = formData.getAll('files') as File[]
-    const fileRecords = []
+    if (!productFiles || productFiles.length === 0) {
+      return NextResponse.json({ error: 'Minimal 1 file produk harus diunggah' }, { status: 400 })
+    }
+
+    const createdProducts = []
 
     for (const file of productFiles) {
       if (file && file.size > 0) {
         const ext = '.' + file.name.split('.').pop()?.toLowerCase()
         if (!ALLOWED_EXTENSIONS.includes(ext)) {
-          return NextResponse.json(
-            { error: `Tipe file ${file.name} tidak diizinkan. Hanya .txt, .pdf, .docx` },
-            { status: 400 }
-          )
+          continue
         }
 
+        // Generate clean title & slug from filename
+        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+        const title = baseName.replace(/[-_]/g, ' ')
+        
+        let rawSlug = baseName
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+
+        let slug = rawSlug
+        let counter = 1
+        while (await prisma.product.findUnique({ where: { slug } })) {
+          slug = `${rawSlug}-${counter}`
+          counter++
+        }
+
+        // Create product
+        const product = await prisma.product.create({
+          data: {
+            title,
+            slug,
+            description: `Produk digital ${title} siap unduh setelah pembayaran.`,
+            price,
+            stock,
+            licenseType,
+            coverUrl,
+            category,
+            isActive: true,
+          },
+        })
+
+        // Upload file to Vercel Blob private
         const fileBlob = await put(`files/${product.id}/${file.name}`, file, {
           access: 'private',
         })
 
-        const fileRecord = await prisma.productFile.create({
+        await prisma.productFile.create({
           data: {
             productId: product.id,
             fileName: file.name,
@@ -118,23 +103,29 @@ export async function POST(request: Request) {
             sizeBytes: file.size,
           },
         })
-        fileRecords.push(fileRecord)
+
+        createdProducts.push(product)
       }
     }
 
+    // Record AuditLog
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1'
     await prisma.auditLog.create({
       data: {
         actor: session.user?.email || 'admin',
-        action: 'CREATE_PRODUCT',
-        detail: `Membuat produk "${product.title}" (${product.id}) lisensi ${licenseType} stok ${stock}`,
+        action: 'BATCH_CREATE_PRODUCTS',
+        detail: `Membuat batch ${createdProducts.length} produk dengan 1 cover bersama`,
         ipAddress: ip,
       },
     })
 
-    return NextResponse.json({ success: true, product })
+    return NextResponse.json({
+      success: true,
+      createdCount: createdProducts.length,
+      products: createdProducts,
+    })
   } catch (error: any) {
-    console.error('Error creating product:', error)
-    return NextResponse.json({ error: error.message || 'Gagal menyimpan produk' }, { status: 500 })
+    console.error('Error batch creating products:', error)
+    return NextResponse.json({ error: error.message || 'Gagal membuat batch produk' }, { status: 500 })
   }
 }

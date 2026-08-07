@@ -14,6 +14,11 @@ model AdminUser {
   createdAt    DateTime @default(now())
 }
 
+enum LicenseType {
+  MULTI_USER         // Bisa dibeli oleh banyak orang
+  EXCLUSIVE_SINGLE   // Eksklusif 1 produk untuk 1 orang saja (stok 1 -> 0 saat lunas)
+}
+
 model Product {
   id          String        @id @default(uuid())
   slug        String        @unique
@@ -21,6 +26,7 @@ model Product {
   description String
   price       Int           // dalam Rupiah, integer
   stock       Int           @default(100) // Stok barang, jika 0 -> Sold Out
+  licenseType LicenseType   @default(MULTI_USER)
   coverUrl    String
   category    String?
   isActive    Boolean       @default(true)

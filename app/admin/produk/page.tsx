@@ -23,7 +23,7 @@ export default async function AdminProductsPage() {
       <div className="border-b-3 border-[#121212] pb-4">
         <h1 className="font-comic text-3xl text-[#121212]">KELOLA PRODUK DIGITAL</h1>
         <p className="text-xs text-gray-600 font-body">
-          Tambah, edit, dan hapus katalog produk digital serta berkas yang dikaitkan.
+          Tambah, edit, dan hapus katalog produk digital, lisensi akses (Multi-User / Eksklusif 1 Orang), serta upload massal dengan 1 cover bersama.
         </p>
       </div>
 

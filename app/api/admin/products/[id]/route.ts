@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { put } from '@vercel/blob'
+import { LicenseType } from '@prisma/client'
 
 const ALLOWED_EXTENSIONS = ['.txt', '.pdf', '.docx', '.doc']
 
@@ -22,7 +23,9 @@ export async function PUT(
     const slug = formData.get('slug') as string
     const description = formData.get('description') as string
     const priceStr = formData.get('price') as string
-    const stockStr = (formData.get('stock') as string) || '0'
+    const licenseTypeInput = (formData.get('licenseType') as string) || 'MULTI_USER'
+    const licenseType: LicenseType = licenseTypeInput === 'EXCLUSIVE_SINGLE' ? 'EXCLUSIVE_SINGLE' : 'MULTI_USER'
+    const stockStr = (formData.get('stock') as string) || (licenseType === 'EXCLUSIVE_SINGLE' ? '1' : '0')
     const category = (formData.get('category') as string) || null
     const isActiveStr = formData.get('isActive') as string
 
@@ -35,8 +38,12 @@ export async function PUT(
     }
 
     const price = parseInt(priceStr, 10)
-    const stock = parseInt(stockStr, 10)
-    const validStock = isNaN(stock) || stock < 0 ? 0 : stock
+    let stock = parseInt(stockStr, 10)
+    if (licenseType === 'EXCLUSIVE_SINGLE') {
+      stock = stock > 0 ? 1 : 0
+    } else if (isNaN(stock) || stock < 0) {
+      stock = 0
+    }
 
     const coverFile = formData.get('cover') as File | null
     let coverUrl = existingProduct.coverUrl
@@ -54,7 +61,8 @@ export async function PUT(
         slug,
         description,
         price,
-        stock: validStock,
+        stock,
+        licenseType,
         category,
         coverUrl,
         isActive: isActiveStr === 'false' ? false : true,
@@ -90,7 +98,7 @@ export async function PUT(
       data: {
         actor: session.user?.email || 'admin',
         action: 'UPDATE_PRODUCT',
-        detail: `Mengubah produk "${updated.title}" (${id}) stok ${validStock}`,
+        detail: `Mengubah produk "${updated.title}" (${id}) lisensi ${licenseType} stok ${stock}`,
         ipAddress: ip,
       },
     })

@@ -76,11 +76,17 @@ export async function POST(request: Request) {
       data: { status: 'PAID' },
     })
 
-    // Decrement stock if > 0
-    if (order.product && order.product.stock > 0) {
+    // Decrement stock & handle EXCLUSIVE_SINGLE license
+    if (order.product) {
+      const isExclusive = order.product.licenseType === 'EXCLUSIVE_SINGLE'
+      const newStock = Math.max(0, order.product.stock - 1)
+
       await prisma.product.update({
         where: { id: order.product.id },
-        data: { stock: { decrement: 1 } },
+        data: {
+          stock: newStock,
+          isActive: isExclusive ? false : newStock > 0 ? order.product.isActive : false,
+        },
       })
     }
 
