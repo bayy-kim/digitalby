@@ -80,7 +80,7 @@ export function BuyButton({
   }
 
   return (
-    <form onSubmit={handleBuy} className="space-y-4 pt-2">
+    <form onSubmit={handleBuy} className="space-y-4 pt-2 font-body">
       {error && (
         <div className="p-3 bg-red-100 border-2 border-[#121212] rounded text-xs text-red-800 font-bold">
           {error}
@@ -115,7 +115,7 @@ export function BuyButton({
         {loading ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>MEMPROSES QRIS...</span>
+            <span>MEMPROSES PESANAN...</span>
           </>
         ) : (
           <>
@@ -125,9 +125,9 @@ export function BuyButton({
         )}
       </button>
 
-      <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-600 font-bold">
-        <Lock className="w-3.5 h-3.5 text-gray-500" />
-        <span>Pembayaran Aman Menggunakan QRIS (Gopay, OVO, Dana, ShopeePay, BCA, dll)</span>
+      <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-600 font-bold text-center">
+        <Lock className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+        <span>Pembayaran Aman Menggunakan QRIS DANA &amp; Transfer SeaBank</span>
       </div>
     </form>
   )

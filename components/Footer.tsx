@@ -39,7 +39,7 @@ export function Footer() {
               <ul className="text-xs text-gray-300 space-y-2">
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-[#FFEE00]" />
-                  <span>QRIS Instan Serba Otomatis 24/7</span>
+                  <span>Pembayaran QRIS DANA &amp; Transfer SeaBank 24/7</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-[#E63946]" />

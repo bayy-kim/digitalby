@@ -42,7 +42,7 @@ export function HeroSection() {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="font-body text-sm sm:text-base lg:text-lg text-[#121212] max-w-2xl mx-auto font-medium mb-8 bg-white border-3 border-[#121212] p-4 rounded-xl shadow-[4px_4px_0_#121212]"
         >
-          Dapatkan template, ebook, dan dokumen digital secara langsung. Bayar dengan QRIS, verifikasi otomatis 24 jam tanpa tunggu admin!
+          Dapatkan template, ebook, dan dokumen digital secara langsung. Bayar via QRIS DANA &amp; SeaBank, file otomatis ter-unlock!
         </motion.p>
 
         {/* Call to Action Button + Bouncing Arrow */}

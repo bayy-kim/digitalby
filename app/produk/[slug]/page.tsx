@@ -137,7 +137,7 @@ export default async function ProductDetailPage({
               <div className="flex items-center justify-between text-xs lg:text-sm">
                 <span className="text-gray-600 font-bold">Metode Akses:</span>
                 <span className="font-bold text-[#E63946]">
-                  Unduh Langsung (QRIS)
+                  Unduh Langsung (Instan)
                 </span>
               </div>
             </div>
@@ -191,11 +191,11 @@ export default async function ProductDetailPage({
                   <span>Akses File Selamanya Setelah Pembayaran</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-gray-700">
-                  <Zap className="w-4 h-4 text-[#E63946] flex-shrink-0" />
-                  <span>Proses Otomatis QRIS Tanpa Tunggu Verifikasi Manual</span>
+                  <Zap className="w-4 h-4 text-[#FFEE00] flex-shrink-0" />
+                  <span>Proses Pembayaran Cepat via QRIS DANA &amp; Transfer SeaBank</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-gray-700">
-                  <ShieldCheck className="w-4 h-4 text-[#1D3557] flex-shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#E63946] flex-shrink-0" />
                   <span>File Asli Tersimpan Aman di Storage Terenkripsi</span>
                 </div>
               </div>
