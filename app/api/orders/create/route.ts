@@ -45,8 +45,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Generate unique sub-rupiah code (e.g. +101 to +999) for 100% precise DANA auto-matching
-    const randomCode = Math.floor(Math.random() * 899) + 101
+    // Generate unique sub-rupiah code (+1 to +500) for 100% precise DANA/SeaBank auto-matching
+    const randomCode = Math.floor(Math.random() * 500) + 1
     const exactAmount = product.price + randomCode
 
     // Set expiration 24 hours from now
